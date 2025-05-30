@@ -1078,20 +1078,20 @@
     </section>
 
     <!-- Donation Form Section -->
-    <!-- Donation Form Section -->
 <section id="donate" class="section">
     <div class="container">
         <h2 class="section-title" data-aos="fade-up">Donate Clothes</h2>
         <p class="text-center mb-8" data-aos="fade-up">Fill out the form below to schedule a pickup or drop-off</p>
         <div class="donation-form" data-aos="zoom-in">
-            <form id="clothDonationForm" action="https://formsubmit.co/ganesh.sunka2004@gmail.com" method="POST">
+            <form id="clothDonationForm" action="https://formsubmit.co/your-email@example.com" method="POST">
                 <!-- FormSubmit Configuration -->
                 <input type="hidden" name="_subject" value="New ClothCare Donation">
-                <input type="hidden" name="_next" value="https://sunkakrishnaganesh.github.io/cloth_care/thank-you.html"> 
+                <input type="hidden" name="_next" value="https://yourusername.github.io/thank-you.html">
                 <input type="hidden" name="_template" value="table">
                 <input type="hidden" name="_honey" style="display:none">
+                <input type="hidden" name="_captcha" value="false">
                 
-                <!-- Email Confirmation Setup -->
+                <!-- Email Confirmation -->
                 <input type="hidden" name="_replyto" id="userEmailField">
                 <input type="hidden" name="_autoresponse" id="autoResponseMessage" value="Thank you for your donation to ClothCare!">
                 
@@ -1100,14 +1100,17 @@
                     <label for="fullName">Full Name</label>
                     <input type="text" id="fullName" name="Full Name" class="form-control" required>
                 </div>
+                
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="Email" class="form-control" required>
                 </div>
+                
                 <div class="form-group">
                     <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" name="Phone Number" class="form-control" required>
+                    <input type="tel" id="phone" name="Phone" class="form-control" required>
                 </div>
+                
                 <div class="form-group">
                     <label>Type of Clothes</label>
                     <div class="radio-group">
@@ -1125,6 +1128,7 @@
                         </label>
                     </div>
                 </div>
+                
                 <div class="form-group">
                     <label>Condition</label>
                     <div class="radio-group">
@@ -1139,60 +1143,103 @@
                         </label>
                     </div>
                 </div>
+                
                 <div class="form-group">
                     <label for="address">Pickup Address</label>
                     <textarea id="address" name="Pickup Address" class="form-control" rows="3" required></textarea>
                 </div>
+                
                 <div class="form-group">
                     <label for="pickupDate">Preferred Pickup Date</label>
-                    <input type="date" id="pickupDate" name="Preferred Pickup Date" class="form-control" required>
+                    <input type="date" id="pickupDate" name="Pickup Date" class="form-control" required>
                 </div>
+                
                 <div class="form-group">
                     <label for="notes">Additional Notes</label>
                     <textarea id="notes" name="Additional Notes" class="form-control" rows="3"></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary">Submit Donation</button>
+                
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <span id="btnText">Submit Donation</span>
+                    <span id="btnSpinner" style="display:none;">
+                        <i class="fas fa-spinner fa-spin"></i> Processing...
+                    </span>
+                </button>
             </form>
         </div>
     </div>
 </section>
 
-<!-- JavaScript for Email Confirmation -->
-<script>
+    <!-- JavaScript -->
+    <script>
     document.getElementById('clothDonationForm').addEventListener('submit', function(e) {
-        // Set the user's email for reply-to
-        const userEmail = document.getElementById('email').value;
-        document.getElementById('userEmailField').value = userEmail;
+        e.preventDefault();
         
-        // Build confirmation message with form data
-        let confirmationMessage = `Thank you for your donation to ClothCare!\n\n` +
-                                 `We've received your submission and will contact you shortly to arrange pickup.\n\n` +
-                                 `Your Submission Details:\n` +
-                                 `----------------------------\n`;
+        const form = this;
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
         
-        // Get all form data
-        const formData = new FormData(this);
-        for (let [key, value] of formData.entries()) {
-            // Skip FormSubmit's hidden fields
-            if (key.startsWith('_')) continue;
-            
-            // Format the confirmation message
-            confirmationMessage += `${key}: ${value}\n`;
+        // Validate email format
+        const email = document.getElementById('email').value;
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            alert('Please enter a valid email address');
+            return false;
         }
         
-        // Add footer to the message
-        confirmationMessage += `\nThank you for supporting our cause!\n` +
-                               `The ClothCare Team`;
+        // Show loading state
+        btnText.style.display = 'none';
+        btnSpinner.style.display = 'inline-block';
+        submitBtn.disabled = true;
         
-        // Set the autoresponse message
+        // Set email fields
+        document.getElementById('userEmailField').value = email;
+        
+        // Build confirmation message
+        let confirmationMessage = `Thank you for your donation to ClothCare!\n\n` +
+                            `We've received your submission and will contact you shortly.\n\n` +
+                            `Your Donation Details:\n` +
+                            `----------------------\n`;
+        
+        const formData = new FormData(form);
+        for (let [key, value] of formData.entries()) {
+            if (!key.startsWith('_') && key !== 'Email') {
+                confirmationMessage += `${key}: ${value}\n`;
+            }
+        }
+        
         document.getElementById('autoResponseMessage').value = confirmationMessage;
         
-        // Optional: Show loading state
-        const submitBtn = this.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        // Create hidden iframe for submission
+        const iframe = document.createElement('iframe');
+        iframe.name = 'formsubmit-target';
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+        
+        form.target = 'formsubmit-target';
+        
+        // Handle submission completion
+        iframe.onload = function() {
+            btnText.style.display = 'inline-block';
+            btnSpinner.style.display = 'none';
+            submitBtn.disabled = false;
+            document.body.removeChild(iframe);
+        };
+        
+        // Submit form
+        form.submit();
+        
+        // Fallback in case iframe fails
+        setTimeout(() => {
+            btnText.style.display = 'inline-block';
+            btnSpinner.style.display = 'none';
+            submitBtn.disabled = false;
+            if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+            }
+        }, 10000);
     });
-</script>
+    </script>
     <!-- About Section -->
     <section id="about" class="section">
         <div class="container">
