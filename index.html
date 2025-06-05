@@ -1235,7 +1235,15 @@
         
         // Submit form
         form.submit();
-        
+        iframe.onload = function () {
+    successModal.classList.add('active');
+    form.reset();
+    btnText.style.display = 'inline-block';
+    btnSpinner.style.display = 'none';
+    submitBtn.disabled = false;
+    document.body.removeChild(iframe);
+};
+
         // Fallback in case iframe fails
         setTimeout(() => {
             btnText.style.display = 'inline-block';
@@ -1581,14 +1589,7 @@
         const donationForm = document.getElementById('clothDonationForm');
         const successModal = document.getElementById('successModal');
 
-        donationForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            // Here you would typically send the form data to a server
-            // For this demo, we'll just show the success modal
-            successModal.classList.add('active');
-            donationForm.reset();
-        });
+        
 
         function closeModal() {
             successModal.classList.remove('active');
